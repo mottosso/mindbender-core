@@ -3,55 +3,100 @@ import bpy
 import avalon.api as api
 
 
-class CreatorOperator(bpy.types.Operator):
+class QtModalOperator(bpy.types.Operator):
+    """A base class for Operators that run a Qt interface."""
+
+    def modal(self, context, event):
+
+        if self._app:
+            self._app.processEvents()
+            return {'PASS_THROUGH'}
+
+        return {"FINISHED"}
+
+    def execute(self, context):
+        """Execute the Operator.
+
+        The child class must implement execute() and call super to trigger this
+        class' execute() at the beginning. The execute() method must finally
+        return {'RUNNING_MODAL"}
+
+        Note that the Qt code should *not* call QApplication.exec_() as it
+        seems that magically the Qt application already processes straight
+        away in Blender. Maybe due to:
+        https://stackoverflow.com/questions/28060218/where-is-pyqt-event
+        -loop-running
+
+
+        """
+        from avalon.vendor.Qt import QtWidgets
+
+        self._app = QtWidgets.QApplication.instance()
+        if not self._app:
+            self._app = QtWidgets.QApplication(["blender"])
+
+
+class CreatorOperator(QtModalOperator):
     """Launch Avalon Creator.."""
 
     bl_idname = "object.avalon_creator"
     bl_label = "Create.."
 
     def execute(self, context):
+        # Initialize Qt operator execution
+        super(CreatorOperator, self).execute(context)
+
         from ..tools import creator
         creator.show()
-        return {'FINISHED'}
+        return {'RUNNING_MODAL'}
 
 
-class LoaderOperator(bpy.types.Operator):
+class LoaderOperator(QtModalOperator):
     """Launch Avalon Loader.."""
 
     bl_idname = "object.avalon_loader"
     bl_label = "Load.."
 
     def execute(self, context):
+        # Initialize Qt operator execution
+        super(LoaderOperator, self).execute(context)
+
         from ..tools import cbloader
         cbloader.show()
-        return {'FINISHED'}
+        return {'RUNNING_MODAL'}
 
 
-class ManagerOperator(bpy.types.Operator):
+class ManagerOperator(QtModalOperator):
     """Launch Avalon Scene Inventory Manager.."""
 
     bl_idname = "object.avalon_manager"
     bl_label = "Manage.."
 
     def execute(self, context):
+        # Initialize Qt operator execution
+        super(ManagerOperator, self).execute(context)
+
         from ..tools import cbsceneinventory
         cbsceneinventory.show()
-        return {'FINISHED'}
+        return {'RUNNING_MODAL'}
 
 
-class PublishOperator(bpy.types.Operator):
+class PublishOperator(QtModalOperator):
     """Launch Pyblish.."""
 
     bl_idname = "object.avalon_publish"
     bl_label = "Publish"
 
     def execute(self, context):
+        # Initialize Qt operator execution
+        super(PublishOperator, self).execute(context)
+
         from ..tools import publish
         publish.show()
-        return {'FINISHED'}
+        return {'RUNNING_MODAL'}
 
 
-class WorkFilesOperator(bpy.types.Operator):
+class WorkFilesOperator(QtModalOperator):
     """Launch Avalon Work Files..
 
     You can use this to easily load files or save your current scene,
@@ -63,22 +108,28 @@ class WorkFilesOperator(bpy.types.Operator):
     bl_label = "Work Files"
 
     def execute(self, context):
+        # Initialize Qt operator execution
+        super(WorkFilesOperator, self).execute(context)
+
         from ..tools import workfiles
         root = os.path.join(os.environ["AVALON_WORKDIR"], "scenes")
         workfiles.show(root)
-        return {'FINISHED'}
+        return {'RUNNING_MODAL'}
 
 
-class ContextManagerOperator(bpy.types.Operator):
+class ContextManagerOperator(QtModalOperator):
     """Launch Avalon Context Manager.."""
 
     bl_idname = "object.avalon_contextmanager"
     bl_label = "Set Avalon Context.."
 
     def execute(self, context):
+        # Initialize Qt operator execution
+        super(ContextManagerOperator, self).execute(context)
+
         from ..tools import contextmanager
         contextmanager.show()
-        return {'FINISHED'}
+        return {'RUNNING_MODAL'}
 
 
 class VIEW3D_MT_AvalonContextManagerSubMenu(bpy.types.Menu):
