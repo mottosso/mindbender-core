@@ -160,6 +160,7 @@ class VIEW3D_MT_AvalonMenu(bpy.types.Menu):
         layout.operator(CreatorOperator.bl_idname)
         layout.operator(LoaderOperator.bl_idname)
         layout.operator(PublishOperator.bl_idname)
+        layout.operator(ManagerOperator.bl_idname)
 
         layout.separator()
 
