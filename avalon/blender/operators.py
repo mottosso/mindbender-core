@@ -62,7 +62,7 @@ class LoaderOperator(QtModalOperator):
         super(LoaderOperator, self).execute(context)
 
         from ..tools import cbloader
-        cbloader.show()
+        cbloader.show(use_context=True)
         return {'RUNNING_MODAL'}
 
 
