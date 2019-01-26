@@ -23,6 +23,32 @@ def get_selected():
     return [o for o in bpy.context.scene.objects if o.select_get()]
 
 
+def get_override_context():
+    """Return an override context.
+
+    See Also:
+        https://docs.blender.org/api/blender2.8/bpy.ops.html#overriding-context
+
+    Returns:
+        dict: The override context.
+
+    """
+    import bpy
+    for window in bpy.context.window_manager.windows:
+        screen = window.screen
+
+        for area in screen.areas:
+            if area.type == 'VIEW_3D':
+                override = {'window': window, 'screen': screen, 'area': area}
+                return override
+
+        for area in screen.areas:
+            if area.type == 'IMAGE_EDITOR':
+                override = {'window': window, 'screen': screen, 'area': area}
+
+    return override
+
+
 def imprint(node, data):
     """Write `data` to `node` as user-defined data.
 

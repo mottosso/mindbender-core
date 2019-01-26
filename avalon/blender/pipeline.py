@@ -5,10 +5,9 @@ from bpy.app.handlers import persistent
 from pyblish import api as pyblish
 
 from ..lib import logger
-from .. import api, schema
+from .. import api, schema, io
 
 from . import operators
-from . import lib
 
 AVALON_CONTAINERS = "AVALON_CONTAINERS"
 # todo: set file open browser default path (like a maya workspace)
@@ -94,14 +93,17 @@ def containerise(name,
         ("name", name),
         ("namespace", namespace),
         ("loader", str(loader)),
-        ("representation", context["representation"]["_id"]),
+        ("representation", str(context["representation"]["_id"])),
     ]
 
-    # TODO: Blender 2.8 Collecttion doesn't have .data?? like objects
-    #       instead it should store directly into the container
-    #       So does the below store with the scene??
-    for key, value in data:
-        container[key] = value
+    # TODO: Blender 2.8 Collection doesn't have .data? like objects
+    #       instead it should store directly into the container.
+    #       Is this good enough?
+    container["avalon"] = dict(data)
+
+    # Link the children nodes
+    for obj in nodes:
+        container.objects.link(obj)
 
     # Link this to the Avalon container
     avalon_container = bpy.data.collections.get(AVALON_CONTAINERS)
@@ -122,7 +124,7 @@ def parse_container(container, validate=True):
     """Return the container node's full container data.
 
     Args:
-        container (str): A container node name.
+        container (bpy.object): A blender collection (an avalon container).
         validate (bool, optional): Whether to validate the container
             with the avalon-core:container-1.0 schema.
 
@@ -130,10 +132,12 @@ def parse_container(container, validate=True):
         dict: The container schema data for this container node.
 
     """
-    data = lib.read(container)
+    data = dict(container.get("avalon", {}))
+    if not data:
+        return None
 
-    # Backwards compatibility pre-schemas for containers
-    data["schema"] = data.get("schema", "avalon-core:container-1.0")
+    # Append required data
+    data["objectName"] = container.name
 
     # Append transient data
     data["node"] = container
@@ -154,8 +158,11 @@ def ls():
     """
 
     for collection in bpy.data.collections:
-        identifier = collection.data.get("id")
-        if identifier != "pyblish.avalon.container":
+        if "avalon" not in collection:
+            continue
+
+        data = collection["avalon"]
+        if data.get("id", None) != "pyblish.avalon.container":
             continue
 
         yield parse_container(collection)
