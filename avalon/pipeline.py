@@ -1227,7 +1227,7 @@ def get_representation_path(representation):
             # Template references unavailable data
             return None
 
-        return os.path.normpath(os.path.dirname(path))
+        return os.path.normpath(path)
 
     def path_from_config():
         try:
@@ -1268,14 +1268,14 @@ def get_representation_path(representation):
             log.debug("Template references unavailable data: %s" % e)
             return None
 
-        return os.path.normpath(os.path.dirname(path))
+        return os.path.normpath(path)
 
     def path_from_data():
         if "path" not in representation["data"]:
             return None
 
         path = representation["data"]["path"]
-        return os.path.normpath(os.path.dirname(path))
+        return os.path.normpath(path)
 
     return (
         path_from_represenation() or
